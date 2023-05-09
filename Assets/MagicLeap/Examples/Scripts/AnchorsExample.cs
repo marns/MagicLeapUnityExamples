@@ -14,10 +14,12 @@ namespace MagicLeap.Examples
     {
         public GameObject reticle;
         public Text statusText;
+        public MarkerTrackingExample markers;
         private MagicLeapInputs magicLeapInputs;
         private MagicLeapInputs.ControllerActions controllerActions;
         private MLAnchors.Request query;
         private Timer localizationInfoUpdateTimer;
+        private MLAnchors.Anchor _anchor;
 
         void Start()
         {
@@ -77,8 +79,18 @@ namespace MagicLeap.Examples
             {
                 if (MLPermissions.CheckPermission(MLPermission.SpatialAnchors).IsOk)
                 {
-                    MLAnchors.Anchor.Create(new Pose(controllerActions.Position.ReadValue<Vector3>(), controllerActions.Rotation.ReadValue<Quaternion>()), 300, out MLAnchors.Anchor anchor);
-                    anchor.Publish();
+                    if (markers.LastTrackedMarker)
+                    {
+                        var marker = markers.LastTrackedMarker.transform;
+
+                        // Delete last anchor before publishing a replacement
+                        if (_anchor != null)
+                        {
+                            _anchor.Delete();
+                        }
+                        MLAnchors.Anchor.Create(new Pose(marker.position, marker.rotation), 0, out _anchor);
+                        _anchor.Publish();
+                    }
                 }
             }
         }

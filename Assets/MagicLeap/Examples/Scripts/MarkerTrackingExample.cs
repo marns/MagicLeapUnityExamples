@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text;
 using MagicLeap.Core;
 using UnityEngine;
+using UnityEngine.Timeline;
 using UnityEngine.UI;
 using UnityEngine.XR.MagicLeap;
 using static UnityEngine.XR.MagicLeap.MLMarkerTracker;
@@ -135,6 +136,8 @@ namespace MagicLeap.Examples
         [HideInInspector]
         public bool UseEdgeRefinement;
 
+        private MarkerVisual _lastTrackedMarker;
+        public MarkerVisual LastTrackedMarker => _lastTrackedMarker;
 
         private List<KeyValuePair<string, MarkerVisual>> markers = new();
         private ASCIIEncoding asciiEncoder = new ASCIIEncoding();
@@ -154,13 +157,14 @@ namespace MagicLeap.Examples
         private void Update()
         {
             // If scanning is enabled from start don't clear flag by input.
+            /*
             if (!EnableMarkerScanning)
             {
                 if (controllerActions.Trigger.ReadValue<float>() > .1f)
                     _ = MLMarkerTracker.StartScanningAsync();
                 else
                     _ = MLMarkerTracker.StopScanningAsync();
-            }
+            }*/
 
             UpdateVisibleTrackers();
             SetStatusText();
@@ -205,15 +209,17 @@ namespace MagicLeap.Examples
                         {
                             MarkerVisual marker = existingMarker.Value;
                             marker.Set(data);
-                        }
+							_lastTrackedMarker = marker;
+						}
                         else
                         {
                             MarkerVisual marker = Instantiate(markerVisualPrefab, xrOrigin);
                             markers.Add(new KeyValuePair<string, MarkerVisual>(id, marker));
                             marker.Set(data);
-                        }
+							_lastTrackedMarker = marker;
+						}						
 
-                        break;
+						break;
                     }
 
                 case MarkerType.EAN_13:
@@ -314,11 +320,8 @@ namespace MagicLeap.Examples
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append($"<color=#B7B7B8><b>ControllerData</b></color>\nStatus: {ControllerStatus.Text}\n\n");
-            builder.Append($"<color=#B7B7B8><b>Controller Input</b></color>\nTrigger status: {controllerActions.Trigger.ReadValue<float>()}\n");
-
             builder.Append($"Marker Tracker running: {MLMarkerTracker.IsStarted} \n\n");
-            builder.Append($"Scanning status: {EnableMarkerScanning || controllerActions.Trigger.ReadValue<float>() > .1f} \n\n");
+            builder.Append($"Scanning status: {EnableMarkerScanning} \n\n");
             builder.Append($"<color=#B7B7B8><b>Marker Settings</b></color>\nScan Types: {MarkerTypes}\n");
             builder.Append($"Enable Marker Scanning: {EnableMarkerScanning}\n");
             builder.Append($"QR Code Size: {QRCodeSize}\n\n");
@@ -330,7 +333,10 @@ namespace MagicLeap.Examples
                         $"<color=#B7B7B8><b>{marker.Key}</b></color>" +
                         $"\nData: {marker.Value.DataString}\n\n");
             }
-            statusText.text = builder.ToString();
+            if (statusText)
+            {
+                statusText.text = builder.ToString();
+            }
         }
     }
 }
