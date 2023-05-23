@@ -6,7 +6,10 @@ namespace MagicLeap.Examples
 {
     public class MarkerVisual : MonoBehaviour
     {
-        [SerializeField] 
+		// Correction for ML2 to match Unity coords system
+		private static readonly Quaternion rotationCorrection = Quaternion.Euler(-90f, -180f, 0f);
+
+		[SerializeField] 
         private TextMesh dataText;
 
         public float Timestamp { get; private set; }
@@ -19,7 +22,7 @@ namespace MagicLeap.Examples
 
             Type = data.Type;
             transform.position = data.Pose.position;
-            transform.rotation = data.Pose.rotation;
+            transform.rotation = data.Pose.rotation * rotationCorrection;
             dataText.text = dataString ?? data.ToString();
             gameObject.SetActive(true);
         }
